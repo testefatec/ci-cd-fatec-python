@@ -12,7 +12,7 @@
 # -----------------------------------------------------------------------------
 # Adicione aqui as bibliotecas necessárias para a aplicação funcionar
 # Exemplos:
-# flask==3.0.0        # Framework web
+flask==3.0.0        # Framework web
 # requests==2.31.0    # Requisições HTTP
 # python-dotenv==1.0.0  # Variáveis de ambiente
 

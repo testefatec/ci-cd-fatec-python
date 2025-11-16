@@ -1,42 +1,70 @@
 import sqlite3
-import sys
+from flask import Flask, request
 
+app = Flask(__name__)
+
+# ❌ VULNERÁVEL: SQL Injection via Flask route
+@app.route('/user/<username>')
 def buscar_usuario_vulneravel(username):
-    # ❌ VULNERÁVEL: Concatenação direta de input do usuário
+    """SQL Injection vulnerability - user input directly in query"""
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
     
-    # SQL Injection - usando f-string com input do usuário
+    # VULNERABILITY: f-string with untrusted input
     query = f"SELECT * FROM usuarios WHERE username = '{username}'"
     cursor.execute(query)
     
-    return cursor.fetchall()
+    results = cursor.fetchall()
+    conn.close()
+    return str(results)
 
-def deletar_usuario_vulneravel(user_id):
-    # ❌ VULNERÁVEL: Concatenação com operador +
+# ❌ VULNERÁVEL: SQL Injection via query parameter
+@app.route('/delete')
+def deletar_usuario_vulneravel():
+    """SQL Injection via query parameter"""
+    user_id = request.args.get('id')
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
     
-    # SQL Injection - concatenação direta
+    # VULNERABILITY: string concatenation with user input
     query = "DELETE FROM usuarios WHERE id = " + user_id
     cursor.execute(query)
     conn.commit()
-    
-def atualizar_email_vulneravel(email, user_id):
-    # ❌ VULNERÁVEL: Usando % formatting
+    conn.close()
+    return "Deleted"
+
+# ❌ VULNERÁVEL: SQL Injection via POST data
+@app.route('/update', methods=['POST'])
+def atualizar_email_vulneravel():
+    """SQL Injection via POST body"""
+    email = request.form.get('email')
+    user_id = request.form.get('id')
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
     
-    # SQL Injection - % formatting
+    # VULNERABILITY: % formatting with user input
     query = "UPDATE usuarios SET email = '%s' WHERE id = %s" % (email, user_id)
     cursor.execute(query)
     conn.commit()
+    conn.close()
+    return "Updated"
 
-# Simulando entrada do usuário (para CodeQL detectar o fluxo)
-if __name__ == "__main__":
-    # Entrada vinda de argumentos da linha de comando (fonte externa)
-    if len(sys.argv) > 1:
-        user_input = sys.argv[1]
-        buscar_usuario_vulneravel(user_input)
-        deletar_usuario_vulneravel(user_input)
-        atualizar_email_vulneravel(user_input, "1")
+# ❌ VULNERÁVEL: SQL Injection via JSON
+@app.route('/search', methods=['POST'])
+def buscar_por_email():
+    """SQL Injection via JSON body"""
+    data = request.get_json()
+    email = data.get('email')
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    
+    # VULNERABILITY: .format() with user input
+    query = "SELECT * FROM usuarios WHERE email = '{}'".format(email)
+    cursor.execute(query)
+    
+    results = cursor.fetchall()
+    conn.close()
+    return str(results)
+
+if __name__ == '__main__':
+    app.run(debug=True)
