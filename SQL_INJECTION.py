@@ -3,7 +3,7 @@ from flask import Flask, request
 
 app = Flask(__name__)
 
-# ❌ VULNERÁVEL: SQL Injection via Flask route
+# ❌ VULNERÁVEL: SQL Injection via Flask route...
 @app.route('/user/<username>')
 def buscar_usuario_vulneravel(username):
     """SQL Injection vulnerability - user input directly in query"""
